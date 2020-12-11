@@ -39,9 +39,7 @@ public class Flink07_Source_Customer {
         //定义基准温度
         private Map<String, SensorReading> map = new HashMap<>();
 
-
         @Override
-
         public void run(SourceContext<SensorReading> ctx) throws Exception {
 
             //给各个传感器赋值基准值
