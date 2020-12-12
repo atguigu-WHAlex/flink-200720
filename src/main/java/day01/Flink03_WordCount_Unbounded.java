@@ -1,5 +1,7 @@
 package day01;
 
+import org.apache.flink.api.common.functions.FilterFunction;
+import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.utils.ParameterTool;
@@ -39,6 +41,18 @@ public class Flink03_WordCount_Unbounded {
 
         //5.计算
         SingleOutputStreamOperator<Tuple2<String, Integer>> result = keyedStream.sum(1);//.setParallelism(2);
+
+        result.filter(new FilterFunction<Tuple2<String, Integer>>() {
+            @Override
+            public boolean filter(Tuple2<String, Integer> value) throws Exception {
+                return value.f1 == 1;
+            }
+        }).map(new MapFunction<Tuple2<String, Integer>, String>() {
+            @Override
+            public String map(Tuple2<String, Integer> value) throws Exception {
+                return value.f0;
+            }
+        }).print();
 
         //6.打印
         result.print("result:");
