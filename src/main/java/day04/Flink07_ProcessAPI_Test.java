@@ -37,7 +37,11 @@ public class Flink07_ProcessAPI_Test {
 
             //获取运行时上下文,做状态编程
             RuntimeContext runtimeContext = getRuntimeContext();
-            //runtimeContext.getState();
+//            runtimeContext.getState();
+//            runtimeContext.getListState();
+//            runtimeContext.getMapState();
+//            runtimeContext.getReducingState();
+//            runtimeContext.getAggregatingState();
         }
 
         //处理进入系统的每一条数据
