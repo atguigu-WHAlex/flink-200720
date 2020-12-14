@@ -25,7 +25,10 @@ public class Flink06_Window_Watermark_Trans2 {
         //引入事件时间语义
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
-        //2.读取端口数据创建流fei
+        //设置生成Watermark的周期
+        env.getConfig().setAutoWatermarkInterval(500);
+
+        //2.读取端口数据创建流
         DataStreamSource<String> socketTextStream = env.socketTextStream("hadoop102", 9999);
 
         //3.转换为JavaBean
