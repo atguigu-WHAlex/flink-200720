@@ -1,6 +1,5 @@
-package day03;
+package day04;
 
-import day01.Flink01_WordCount_Batch;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.api.java.tuple.Tuple2;
@@ -15,13 +14,13 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 
 //滚动时间窗口,计算最近10秒数据的WordCount
-public class Flink09_Window_Watermark {
+public class Flink05_Window_Watermark_Trans1 {
 
     public static void main(String[] args) throws Exception {
 
         //1.获取执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setParallelism(1);
+        env.setParallelism(2);
         //引入事件时间语义
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 

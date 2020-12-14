@@ -1,6 +1,5 @@
-package day03;
+package day04;
 
-import day01.Flink01_WordCount_Batch;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.api.java.tuple.Tuple2;
@@ -13,9 +12,10 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
+import org.apache.flink.util.OutputTag;
 
 //滚动时间窗口,计算最近10秒数据的WordCount
-public class Flink09_Window_Watermark {
+public class Flink01_Window_Watermark_Lateness {
 
     public static void main(String[] args) throws Exception {
 
@@ -50,13 +50,21 @@ public class Flink09_Window_Watermark {
         KeyedStream<Tuple2<String, Integer>, Tuple> keyedStream = wordToOne.keyBy(0);
 
         //5.开窗
-        WindowedStream<Tuple2<String, Integer>, Tuple, TimeWindow> windowedStream = keyedStream.timeWindow(Time.seconds(5));
+        WindowedStream<Tuple2<String, Integer>, Tuple, TimeWindow> windowedStream = keyedStream
+                .timeWindow(Time.seconds(5))
+                .allowedLateness(Time.seconds(2))
+                .sideOutputLateData(new OutputTag<Tuple2<String, Integer>>("sideOutPut") {
+                });
 
         //6.聚合操作
         SingleOutputStreamOperator<Tuple2<String, Integer>> result = windowedStream.sum(1);
 
         //7.打印
-        result.print();
+        result.print("result");
+
+        //获取侧输出流数据
+        result.getSideOutput(new OutputTag<Tuple2<String, Integer>>("sideOutPut") {
+        }).print("sideOutPut");
 
         //8.执行
         env.execute();
