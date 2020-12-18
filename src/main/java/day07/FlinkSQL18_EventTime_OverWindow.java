@@ -4,14 +4,16 @@ import bean.SensorReading;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.timestamps.AscendingTimestampExtractor;
 import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
 import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.table.api.Over;
 import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.Tumble;
 import org.apache.flink.table.api.java.StreamTableEnvironment;
 import org.apache.flink.types.Row;
 
-public class FlinkSQL14_EventTime_GroupWindow_Tumble {
+public class FlinkSQL18_EventTime_OverWindow {
 
     public static void main(String[] args) throws Exception {
 
@@ -30,10 +32,10 @@ public class FlinkSQL14_EventTime_GroupWindow_Tumble {
                             Long.parseLong(fields[1]),
                             Double.parseDouble(fields[2]));
                 })
-                .assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor<SensorReading>(Time.seconds(2)) {
+                .assignTimestampsAndWatermarks(new AscendingTimestampExtractor<SensorReading>() {
                     @Override
-                    public long extractTimestamp(SensorReading element) {
-                        return element.getTs() * 1000L;
+                    public long extractAscendingTimestamp(SensorReading element) {
+                        return element.getTs();
                     }
                 });
 
@@ -41,15 +43,13 @@ public class FlinkSQL14_EventTime_GroupWindow_Tumble {
         Table table = tableEnv.fromDataStream(sensorDS, "id,ts,temp,rt.rowtime");
 
         //4.TableAPI
-        Table tableResult = table.window(Tumble.over("10.seconds").on("rt").as("tw"))
-                .groupBy("tw,id")
-                .select("id,id.count");
+        Table tableResult = table.window(Over.partitionBy("id").orderBy("rt").as("ow"))
+                .select("id,id.count over ow");
 
         //5.SQL
         tableEnv.createTemporaryView("sensor", table);
-        Table sqlResult = tableEnv.sqlQuery("select id,count(id) " +
-                "from sensor " +
-                "group by id,tumble(rt,interval '10' second)");
+        Table sqlResult = tableEnv.sqlQuery("select id,count(id) over(partition by id order by rt) ct " +
+                "from sensor");
 
         //6.转换为流进行打印输出
         tableEnv.toAppendStream(tableResult, Row.class).print("Table");
